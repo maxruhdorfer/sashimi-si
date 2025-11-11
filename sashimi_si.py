@@ -323,8 +323,8 @@ class SIDM_cross_section(units_and_constants):
         veff2 = np.expand_dims(veff,axis=-1)
         costheta = np.linspace(-1.,1.,100)
         integrand = self.dsigmadcostheta(sigma0_m,w,v2,costheta)*v2**7*(1.-costheta**2)*np.exp(-v2**2/(4.*veff2**2))
-        integrand2 = integrate.simps(integrand,x=costheta,axis=-1)
-        sigma_eff_m = integrate.simps(integrand2,x=v,axis=0)
+        integrand2 = integrate.simpson(integrand,x=costheta,axis=-1)
+        sigma_eff_m = integrate.simpson(integrand2,x=v,axis=0)
         sigma_eff_m = sigma_eff_m/(512.*veff**8)
 
         f_int = interp1d(Vmax_dummy,sigma_eff_m)
@@ -663,10 +663,10 @@ class SIDM_parametric_model(SIDM_cross_section):
         t_c         = self.t_collapse(self.sigma_eff_m(Vmax_CDM),rmax_CDM,Vmax_CDM)
         Vmax0       = np.expand_dims(Vmax_CDM[:,0],axis=1)
         integrand   = self.dVmaxSIDMdtt_numexpr_optimized((t-t_f)/t_c,Vmax0)/t_c
-        VmaxSIDM_z0 = Vmax_CDM[:,-1]+integrate.simps(integrand,x=t*np.ones((len(Vmax_CDM),1,1)),axis=1)
+        VmaxSIDM_z0 = Vmax_CDM[:,-1]+integrate.simpson(integrand,x=t*np.ones((len(Vmax_CDM),1,1)),axis=1)
         rmax0       = np.expand_dims(rmax_CDM[:,0],axis=1)
         integrand   = self.drmaxSIDMdtt_numexpr_optimized((t-t_f)/t_c,rmax0)/t_c
-        rmaxSIDM_z0 = rmax_CDM[:,-1]+integrate.simps(integrand,x=t*np.ones((len(rmax_CDM),1,1)),axis=1)
+        rmaxSIDM_z0 = rmax_CDM[:,-1]+integrate.simpson(integrand,x=t*np.ones((len(rmax_CDM),1,1)),axis=1)
         
         tt             = np.minimum(((t-t_f)/t_c)[:,-1],self.tt_th)
         Vmax0_CDM_fict = self.get_Vmax0(VmaxSIDM_z0,tt)
@@ -1319,10 +1319,10 @@ class subhalo_properties(halo_model, SIDM_parametric_model, SIDM_cross_section):
 
         _zmax              = np.linspace(redshift,10.,1001)
         z_dummy            = np.linspace(redshift,_zmax,1000)
-        t_L                = integrate.simps(1./(self.Hubble(z_dummy)*(1.+z_dummy)),x=z_dummy,axis=0)
+        t_L                = integrate.simpson(1./(self.Hubble(z_dummy)*(1.+z_dummy)),x=z_dummy,axis=0)
         self.lookback_time = interp1d(_zmax,t_L)
         z_dummy            = np.linspace(redshift,1000,10000)
-        self.t_U           = integrate.simps(1./(self.Hubble(z_dummy)*(1.+z_dummy)),x=z_dummy)
+        self.t_U           = integrate.simpson(1./(self.Hubble(z_dummy)*(1.+z_dummy)),x=z_dummy)
         del z_dummy, _zmax, t_L
 
         zdist         = np.arange(redshift+dz,zmax+dz,dz)  # zdist.shape = (n_z,)
@@ -1502,7 +1502,7 @@ class subhalo_properties(halo_model, SIDM_parametric_model, SIDM_cross_section):
 
         Na           = self.Na_calc(ma_matrix,zdist,M0,z0=0.,N_herm=N_hermNa,Nrand=1000,
                                     Na_model=Na_model)
-        Na_total     = integrate.simps(integrate.simps(Na,x=np.log(ma_matrix)),x=np.log(1+zdist))
+        Na_total     = integrate.simpson(integrate.simpson(Na,x=np.log(ma_matrix)),x=np.log(1+zdist))
         weightCDM    = Na/(1.+zdist.reshape(-1,1))
         weightCDM    = weightCDM/np.sum(weightCDM)*Na_total
         weightCDM    = np.expand_dims(weightCDM,axis=1)*(w1.reshape(-1,1))/np.sqrt(np.pi)
